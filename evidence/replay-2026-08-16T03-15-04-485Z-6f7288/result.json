@@ -1,0 +1,12 @@
+{
+  "status": "business_outcome",
+  "capabilityId": "lookup-savings-balance",
+  "capabilityVersion": 1,
+  "outputs": {},
+  "outcome": {
+    "id": "member_not_found",
+    "message": "No member exists for the given ID"
+  },
+  "stepsCompleted": 2,
+  "runId": "replay-2026-08-16T03-15-04-485Z-6f7288"
+}

@@ -1,0 +1,8 @@
+{"seq":1,"at":"2026-08-16T03:15:04.636Z","type":"observe","stepId":"s2","uri":"http://127.0.0.1:3847/","title":"Member Search — CoreLink"}
+{"seq":2,"at":"2026-08-16T03:15:04.637Z","type":"outcome","id":"system_notice","kind":"recoverable","message":"Maintenance interstitial"}
+{"seq":3,"at":"2026-08-16T03:15:04.674Z","type":"recover","id":"system_notice","ok":true}
+{"seq":4,"at":"2026-08-16T03:15:04.692Z","type":"act","stepId":"s2","action":"fill","ok":true,"matched":{"kind":"role","role":"textbox","name":"Member ID"},"value":"9***99"}
+{"seq":5,"at":"2026-08-16T03:15:04.698Z","type":"observe","stepId":"s3","uri":"http://127.0.0.1:3847/","title":"Member Search — CoreLink"}
+{"seq":6,"at":"2026-08-16T03:15:04.729Z","type":"act","stepId":"s3","action":"click","ok":true,"matched":{"kind":"role","role":"button","name":"Search"}}
+{"seq":7,"at":"2026-08-16T03:15:04.743Z","type":"observe","stepId":"s4","uri":"http://127.0.0.1:3847/?error=not_found","title":"Member Search — CoreLink"}
+{"seq":8,"at":"2026-08-16T03:15:04.743Z","type":"outcome","id":"member_not_found","kind":"business","message":"No member exists for the given ID"}

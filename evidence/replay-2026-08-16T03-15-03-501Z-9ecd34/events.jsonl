@@ -1,0 +1,8 @@
+{"seq":1,"at":"2026-08-16T03:15:03.893Z","type":"observe","stepId":"s2","uri":"http://127.0.0.1:3847/","title":"Member Search — CoreLink"}
+{"seq":2,"at":"2026-08-16T03:15:03.894Z","type":"outcome","id":"system_notice","kind":"recoverable","message":"Maintenance interstitial"}
+{"seq":3,"at":"2026-08-16T03:15:03.935Z","type":"recover","id":"system_notice","ok":true}
+{"seq":4,"at":"2026-08-16T03:15:03.959Z","type":"act","stepId":"s2","action":"fill","ok":true,"matched":{"kind":"role","role":"textbox","name":"Member ID"},"value":"1***45"}
+{"seq":5,"at":"2026-08-16T03:15:03.967Z","type":"observe","stepId":"s3","uri":"http://127.0.0.1:3847/","title":"Member Search — CoreLink"}
+{"seq":6,"at":"2026-08-16T03:15:03.988Z","type":"act","stepId":"s3","action":"click","ok":true,"matched":{"kind":"role","role":"button","name":"Search"}}
+{"seq":7,"at":"2026-08-16T03:15:04.005Z","type":"observe","stepId":"s4","uri":"http://127.0.0.1:3847/member?id=12345","title":"Member 12345 — CoreLink"}
+{"seq":8,"at":"2026-08-16T03:15:04.010Z","type":"act","stepId":"s4","action":"extract","ok":true,"matched":{"kind":"row_cell","rowText":"Savings","columnHeader":"Balance"}}

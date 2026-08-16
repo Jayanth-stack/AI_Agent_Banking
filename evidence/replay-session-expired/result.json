@@ -1,0 +1,14 @@
+{
+  "status": "failed",
+  "capabilityId": "lookup-savings-balance",
+  "capabilityVersion": 1,
+  "outputs": {},
+  "error": {
+    "stepId": "s2",
+    "expected": "step to proceed",
+    "observed": "Teller session expired",
+    "debug": ".runs/replay-2026-08-16T03-15-05-207Z-74f785/screenshots/002-hard-session_expired.png"
+  },
+  "stepsCompleted": 0,
+  "runId": "replay-2026-08-16T03-15-05-207Z-74f785"
+}

@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "lookup-savings-balance",
+  "version": 1,
+  "name": "Lookup member savings balance",
+  "description": "Search a member by ID, open the profile, extract the Savings row balance.",
+  "vendor": {
+    "product": "corelink-demo",
+    "channel": "web"
+  },
+  "surfaceKind": "web",
+  "entry": {
+    "kind": "url",
+    "value": "http://127.0.0.1:3847/"
+  },
+  "contract": {
+    "params": [
+      {
+        "name": "memberId",
+        "type": "identifier",
+        "required": true,
+        "description": "Member identifier as entered on the search screen",
+        "pii": "identifier"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "savingsBalance",
+        "type": "money",
+        "required": true,
+        "description": "Current savings balance as displayed on the profile",
+        "pii": "financial"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "s2",
+      "action": "fill",
+      "description": "Enter member ID",
+      "risk": "reversible",
+      "target": {
+        "strategies": [
+          { "kind": "role", "role": "textbox", "name": "Member ID" },
+          { "kind": "title", "text": "Member ID" },
+          { "kind": "name_attr", "name": "member_id" },
+          { "kind": "near_text", "text": "Member ID", "role": "textbox" }
+        ],
+        "notes": "title=accessible name on this legacy form; name_attr is the vendor's native hook; near_text covers unlabeled cells."
+      },
+      "value": { "kind": "param", "name": "memberId" },
+      "checkpoint": {
+        "id": "cp-s2",
+        "description": "Still on search after fill",
+        "anyOf": [
+          { "type": "url_includes", "value": "/" },
+          { "type": "title_includes", "value": "Member Search" }
+        ]
+      }
+    },
+    {
+      "id": "s3",
+      "action": "click",
+      "description": "Submit member search",
+      "risk": "safe",
+      "target": {
+        "strategies": [
+          { "kind": "role", "role": "button", "name": "Search" },
+          { "kind": "title", "text": "Search" }
+        ]
+      },
+      "checkpoint": {
+        "id": "cp-s3",
+        "description": "Reached member profile or a known search outcome",
+        "anyOf": [
+          { "type": "url_includes", "value": "/member" },
+          { "type": "title_includes", "value": "Member" },
+          { "type": "text_includes", "value": "No member record matches" },
+          { "type": "text_includes", "value": "Permission denied" }
+        ]
+      }
+    },
+    {
+      "id": "s4",
+      "action": "extract",
+      "description": "Read Savings balance from the accounts table",
+      "risk": "safe",
+      "target": {
+        "strategies": [
+          { "kind": "row_cell", "rowText": "Savings", "columnHeader": "Balance" }
+        ],
+        "notes": "Header-aligned cell in the row whose Type is Savings. Survives column reorder better than nth-child."
+      },
+      "extractAs": "savingsBalance"
+    }
+  ],
+  "outcomes": [
+    {
+      "id": "member_not_found",
+      "kind": "business",
+      "when": { "type": "text_includes", "value": "No member record matches" },
+      "message": "No member exists for the given ID"
+    },
+    {
+      "id": "validation_error",
+      "kind": "business",
+      "when": { "type": "text_includes", "value": "Member ID is required" },
+      "message": "Search validation failed"
+    },
+    {
+      "id": "permission_denied",
+      "kind": "business",
+      "when": { "type": "text_includes", "value": "Permission denied" },
+      "message": "Caller is not authorized to view this member"
+    },
+    {
+      "id": "session_expired",
+      "kind": "hard",
+      "when": { "type": "text_includes", "value": "session has expired" },
+      "message": "Teller session expired",
+      "recover": { "type": "fail", "reason": "session_expired" }
+    },
+    {
+      "id": "system_notice",
+      "kind": "recoverable",
+      "when": { "type": "dialog", "name": "System Notice" },
+      "message": "Maintenance interstitial",
+      "recover": {
+        "type": "dismiss",
+        "target": {
+          "strategies": [
+            { "kind": "role", "role": "button", "name": "OK" },
+            { "kind": "title", "text": "OK" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "system_notice_text",
+      "kind": "recoverable",
+      "when": { "type": "text_includes", "value": "scheduled maintenance window" },
+      "message": "Maintenance interstitial (text)",
+      "recover": {
+        "type": "dismiss",
+        "target": {
+          "strategies": [
+            { "kind": "role", "role": "button", "name": "OK" },
+            { "kind": "title", "text": "OK" }
+          ]
+        }
+      }
+    }
+  ],
+  "success": {
+    "checkpointIds": ["cp-s2", "cp-s3"],
+    "requiredOutputs": ["savingsBalance"]
+  },
+  "review": {
+    "summary": "Search by member ID, open profile, extract Savings.Balance. Interstitial is a recoverable outcome, not a happy-path assumption.",
+    "irreversibleStepIds": [],
+    "recordedAt": "2026-08-15T00:00:00.000Z",
+    "recordedAgainst": "http://127.0.0.1:3847/"
+  },
+  "policy": {
+    "allowedHosts": ["127.0.0.1", "localhost"],
+    "allowedActions": ["navigate", "click", "fill", "press", "extract", "dismiss", "wait", "human"],
+    "allowIrreversibleUnattended": false
+  }
+}

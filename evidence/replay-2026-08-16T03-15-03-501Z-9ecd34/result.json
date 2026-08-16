@@ -1,0 +1,10 @@
+{
+  "status": "success",
+  "capabilityId": "lookup-savings-balance",
+  "capabilityVersion": 1,
+  "outputs": {
+    "savingsBalance": "$4,250.18"
+  },
+  "stepsCompleted": 3,
+  "runId": "replay-2026-08-16T03-15-03-501Z-9ecd34"
+}
