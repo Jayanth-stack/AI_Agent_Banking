@@ -143,7 +143,7 @@ UI drift is secondary here (enterprise consoles move slowly). When it happens it
 
 ### Discovery loop
 
-Discovery (`src/agent/loop.ts`) is the one place a model runs. The model sees a flattened a11y snapshot, not pixels. OpenAI only (`src/agent/llm.ts`); `ANTHROPIC_*` is in `.env.example` and not wired.
+Discovery (`src/agent/loop.ts`) is the one place a model runs. The model sees a flattened a11y snapshot, not pixels. `src/agent/llm.ts` prefers Gemini (`GEMINI_API_KEY`) and falls back to OpenAI. Set `LLM_PROVIDER=openai` to force OpenAI when both keys exist. Replay still never calls a model.
 
 ```mermaid
 flowchart TD
@@ -151,7 +151,7 @@ flowchart TD
   classify -->|recoverable dismiss| dismiss[act dismiss] --> observe
   classify --> stuck{3 identical snapshot hashes?}
   stuck -->|yes| hitl[HITL]
-  stuck -->|no| llm[OpenAI Decision JSON]
+  stuck -->|no| llm[LLM Decision JSON]
   llm -->|escalate| hitl
   llm -->|done| extractMaybe[optional extract] --> build[buildCapability]
   llm -->|action| policy{policy gate}
@@ -221,7 +221,7 @@ UI traits: table layout, `title=` as accessible name, `name="member_id"`, no tes
 
 ## 8. Cuts
 
-**In and tested:** schema, Playwright surface, locator resolver, discovery (OpenAI), replay executor, outcome taxonomy, policy, redaction, HITL lock + operator page, CoreLink, one seeded capability, 6 Vitest files including replay e2e (`12345` / `99999` / `88888` / expire).
+**In and tested:** schema, Playwright surface, locator resolver, discovery (Gemini, OpenAI fallback), replay executor, outcome taxonomy, policy, redaction, HITL lock + operator page, CoreLink, one seeded capability, Vitest including replay e2e (`12345` / `99999` / `88888` / expire).
 
 **In schema or docs, not runtime:** `tenantOverrides` application, desktop `ISurface`, Anthropic, `draft → approved` gate, credential broker, canary overlay compiler.
 
@@ -242,4 +242,4 @@ npm run replay -- --artifact lookup-savings-balance --params memberId=12345 --ex
 npm run replay -- --artifact lookup-savings-balance --params memberId=12345 --force-escalate --headed --auto-resume
 ```
 
-Discovery (`npm run discover`) needs `OPENAI_API_KEY`. Everything else does not.
+Discovery (`npm run discover`) needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`). Everything else does not.

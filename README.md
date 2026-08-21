@@ -7,12 +7,12 @@ Proxy target: **CoreLink**, a local teller console (table layout, no test IDs, i
 ## Setup
 
 ```bash
-cp .env.example .env   # add OPENAI_API_KEY for discovery only
+cp .env.example .env   # add GEMINI_API_KEY for discovery only
 npm install
 npx playwright install chromium
 ```
 
-Replay and tests do **not** need a model key. Discovery does (`OPENAI_API_KEY`). Requires Node 20+.
+Replay and tests do **not** need a model key. Discovery does (`GEMINI_API_KEY`, or `OPENAI_API_KEY` as fallback). Requires Node 20+.
 
 ```bash
 npm test
@@ -73,6 +73,8 @@ Run without live LLM: skip `discover`, use the seeded `capabilities/lookup-savin
 
 | Env | Used by |
 | --- | --- |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` | Discovery only |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | Discovery (default) |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` | Discovery fallback |
+| `LLM_PROVIDER` (`gemini` \| `openai`) | Force provider when both keys exist |
 | `TARGET_PORT` (default 3847) | CoreLink |
 | `OPERATOR_PORT` (default 3848) | HITL UI |

@@ -15,4 +15,4 @@ Discovery (LLM in the loop) writes `discover-*` here when you run:
 npm run discover -- --goal "look up member 12345 and read their current savings balance"
 ```
 
-That needs `OPENAI_API_KEY`. Replay does not.
+That needs `GEMINI_API_KEY` (or `OPENAI_API_KEY`). Replay does not.

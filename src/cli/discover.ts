@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, cp } from "node:fs/promises";
 import path from "node:path";
+import { resolveProvider } from "../agent/llm.js";
 import { discover } from "../agent/loop.js";
 import { ArtifactStore } from "../artifact/store.js";
 import { ControlPlane } from "../escalation/control.js";
@@ -12,10 +13,14 @@ import { ensureTarget } from "./ensure-target.js";
 
 loadDotEnv();
 
-if (!process.env.OPENAI_API_KEY) {
-  console.error("OPENAI_API_KEY is required for discovery. Replay does not need a model.");
+let provider: ReturnType<typeof resolveProvider>;
+try {
+  provider = resolveProvider();
+} catch (err) {
+  console.error(err instanceof Error ? err.message : err);
   process.exit(1);
 }
+console.error(`discovery model: ${provider}`);
 
 const goal =
   arg("--goal") ??

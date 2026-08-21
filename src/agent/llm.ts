@@ -30,6 +30,8 @@ export const Decision = z.object({
 });
 export type Decision = z.infer<typeof Decision>;
 
+export type LlmProvider = "gemini" | "openai";
+
 const SYSTEM = `You operate a legacy bank back-office UI through its accessibility tree.
 You are in DISCOVERY: figure out how to complete the goal, one action at a time.
 
@@ -45,7 +47,37 @@ Rules:
 
 Return JSON only matching the schema.`;
 
-export async function decide(opts: {
+export function resolveProvider(): LlmProvider {
+  const forced = process.env.LLM_PROVIDER?.trim().toLowerCase();
+  if (forced === "gemini" || forced === "openai") {
+    if (forced === "gemini" && !process.env.GEMINI_API_KEY) {
+      throw new Error("LLM_PROVIDER=gemini but GEMINI_API_KEY is not set");
+    }
+    if (forced === "openai" && !process.env.OPENAI_API_KEY) {
+      throw new Error("LLM_PROVIDER=openai but OPENAI_API_KEY is not set");
+    }
+    return forced;
+  }
+  if (process.env.GEMINI_API_KEY) return "gemini";
+  if (process.env.OPENAI_API_KEY) return "openai";
+  throw new Error("Discovery needs GEMINI_API_KEY (preferred) or OPENAI_API_KEY. Replay does not need a model.");
+}
+
+export function parseDecision(raw: string): Decision {
+  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/u, "");
+  try {
+    return Decision.parse(JSON.parse(trimmed));
+  } catch {
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return Decision.parse(JSON.parse(trimmed.slice(start, end + 1)));
+    }
+    throw new Error(`Model returned non-JSON decision: ${raw.slice(0, 400)}`);
+  }
+}
+
+function userPrompt(opts: {
   goal: string;
   params: Record<string, string>;
   snapshot: string;
@@ -53,14 +85,8 @@ export async function decide(opts: {
   title: string;
   lastResult?: string;
   step: number;
-}): Promise<Decision> {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY is required for discovery");
-
-  const client = new OpenAI({ apiKey: key });
-  const model = process.env.OPENAI_MODEL ?? "gpt-4o";
-
-  const user = [
+}): string {
+  return [
     `Goal: ${opts.goal}`,
     `Known params: ${JSON.stringify(opts.params)}`,
     `Step: ${opts.step}`,
@@ -72,6 +98,43 @@ export async function decide(opts: {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+async function decideGemini(user: string): Promise<Decision> {
+  const key = process.env.GEMINI_API_KEY!;
+  const model = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: SYSTEM }] },
+      contents: [{ role: "user", parts: [{ text: user }] }],
+      generationConfig: {
+        temperature: 0.1,
+        responseMimeType: "application/json",
+      },
+    }),
+  });
+
+  const body = (await res.json()) as {
+    error?: { message?: string; status?: string };
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+
+  if (!res.ok) {
+    throw new Error(`Gemini ${res.status}: ${body.error?.message ?? res.statusText}`);
+  }
+
+  const text = body.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "{}";
+  return parseDecision(text);
+}
+
+async function decideOpenAI(user: string): Promise<Decision> {
+  const key = process.env.OPENAI_API_KEY!;
+  const client = new OpenAI({ apiKey: key });
+  const model = process.env.OPENAI_MODEL ?? "gpt-4o";
 
   const completion = await client.chat.completions.create({
     model,
@@ -83,6 +146,19 @@ export async function decide(opts: {
     ],
   });
 
-  const raw = completion.choices[0]?.message?.content ?? "{}";
-  return Decision.parse(JSON.parse(raw));
+  return parseDecision(completion.choices[0]?.message?.content ?? "{}");
+}
+
+export async function decide(opts: {
+  goal: string;
+  params: Record<string, string>;
+  snapshot: string;
+  uri: string;
+  title: string;
+  lastResult?: string;
+  step: number;
+}): Promise<Decision> {
+  const provider = resolveProvider();
+  const user = userPrompt(opts);
+  return provider === "gemini" ? decideGemini(user) : decideOpenAI(user);
 }
